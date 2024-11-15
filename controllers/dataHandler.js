@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 let urlMappings = {}; // In-memory storage
 
 // Helper: Read data from memory
