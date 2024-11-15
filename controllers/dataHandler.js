@@ -1,20 +1,13 @@
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
+let urlMappings = {}; // In-memory storage
 
-const dataFilePath = path.join(__dirname, "../data.json");
-
-// Helper: Read data from the file
+// Helper: Read data from memory
 const readData = () => {
-  if (!fs.existsSync(dataFilePath)) {
-    fs.writeFileSync(dataFilePath, JSON.stringify({}));
-  }
-  return JSON.parse(fs.readFileSync(dataFilePath));
+  return urlMappings;
 };
 
-// Helper: Write data to the file
+// Helper: Write data to memory
 const writeData = (data) => {
-  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
+  urlMappings = { ...data };
 };
 
 // Generate a unique short code
