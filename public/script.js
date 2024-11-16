@@ -1,31 +1,37 @@
-// Fetch joke from the local API
-function getPersonalizedJoke() {
-  fetch("/v1/personalized")
-    .then((response) => response.json())
-    .then((joke) => {
-      document.getElementById(
-        "joke-display"
-      ).innerText = `${joke.setup} - ${joke.punchline}`;
-    })
-    .catch((error) => {
-      document.getElementById("joke-display").innerText =
-        "Failed to fetch locally joke!";
-      console.error(error);
-    });
-}
+document
+  .getElementById("shorten-button")
+  .addEventListener("click", async () => {
+    const urlInput = document.getElementById("url-input").value.trim();
+    const resultContainer = document.getElementById("result-container");
+    const shortenedUrl = document.getElementById("shortened-url");
 
-// Fetch joke from the public API
-function getOnlineJoke() {
-  fetch("/v1/online")
-    .then((response) => response.json())
-    .then((joke) => {
-      document.getElementById(
-        "joke-display"
-      ).innerText = `${joke.setup} - ${joke.punchline}`;
-    })
-    .catch((error) => {
-      document.getElementById("joke-display").innerText =
-        "Failed to fetch public joke!";
-      console.error(error);
-    });
-}
+    if (!urlInput) {
+      alert("Please enter a URL to shorten.");
+      return;
+    }
+
+    try {
+      // Make a POST request to the backend
+      const response = await fetch("http://localhost:5000/v1/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: urlInput }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Something went wrong");
+      }
+
+      const data = await response.json();
+
+      // Display the shortened URL
+      shortenedUrl.href = data.shortUrl;
+      shortenedUrl.textContent = data.shortUrl;
+      resultContainer.classList.remove("hidden");
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  });

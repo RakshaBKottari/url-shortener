@@ -15,12 +15,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // route
 app.get("/api", (req, res) => {
-  res.send("Welcome to the Random Jokes API!");
+  res.send("Welcome to the url generator API!");
 });
 
 // Use the main router for all routes
-const jokeRoutes = require("./routes/route");
-app.use("/v1", jokeRoutes);
+const urlRoutes = require("./routes/route");
+app.use("/v1", urlRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

@@ -1,53 +1,53 @@
 const express = require("express");
-const shorternurl = express.Router();
 
-const {
-  generateShortCode,
-  getOriginalUrl,
-  saveUrlMapping,
-} = require("../controllers/dataHandler");
+const crypto = require("crypto");
+
+// In-memory storage for URL mapping
+const urlMap = new Map();
+const shortenUrl = express.Router();
 
 /**
- * POST /shorten
- * Description: Shorten a URL.
- * Method: POST
- * Request Body: { longUrl: string }
- * Response: { originalUrl: string, shortUrl: string }
+ * Shortens a given URL.
  */
-shorternurl.post("/shorten", async (req, res) => {
-  const { longUrl } = req.body;
-
-  if (!longUrl || !longUrl.startsWith("http")) {
-    return res.status(400).json({ error: "Invalid URL" });
+shortenUrl.post("/shorten", async (req, res) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ error: "URL is required" });
   }
 
-  const shortCode = generateShortCode();
-  saveUrlMapping(shortCode, longUrl);
+  // Create a hash (short version of the URL)
+  const shortUrl = crypto
+    .createHash("md5")
+    .update(url)
+    .digest("hex")
+    .substring(0, 6);
 
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  // Store the mapping in memory
+  urlMap.set(shortUrl, url);
 
-  res.json({
-    originalUrl: longUrl,
-    shortUrl: `${baseUrl}/${shortCode}`,
-  });
+  // Dynamically construct the full shortened URL
+  const fullShortUrl = `${req.protocol}://${req.get("host")}/v1/${shortUrl}`;
+
+  // Respond with the shortened URL
+  res.json({ originalUrl: url, shortUrl: fullShortUrl });
 });
 
 /**
- * GET /:shortUrl
- * Description: Redirect to the original URL using the short URL.
- * Method: GET
- * Path Parameter: shortUrl (string)
- * Response: Redirects to the original URL or returns a 404 error if not found.
+ * Redirects to the original URL based on the shortened URL.
  */
-shorternurl.get("/:shortUrl", async (req, res) => {
+const redirectUrl = (req, res) => {
   const { shortUrl } = req.params;
-  const longUrl = getOriginalUrl(shortUrl);
 
-  if (longUrl) {
-    res.redirect(longUrl);
-  } else {
-    res.status(404).json({ error: "Short URL not found" });
+  // Find the original URL
+  const originalUrl = urlMap.get(shortUrl);
+
+  console.log("hehe", originalUrl);
+  if (!originalUrl) {
+    return res.status(404).json({ error: "Shortened URL not found" });
   }
-});
 
-module.exports = shorternurl;
+  // Redirect to the original URL
+  res.redirect(originalUrl);
+};
+
+module.exports = { shortenUrl, redirectUrl };
